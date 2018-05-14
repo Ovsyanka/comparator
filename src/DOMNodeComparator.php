@@ -74,17 +74,24 @@ class DOMNodeComparator extends ObjectComparator
      */
     public function nodeToText(DOMNode $node, bool $canonicalize = true, bool $ignoreCase = false): string
     {
-        $encoding = (isset($node->encoding)) ? $node->encoding : 'UTF-8';
+        // $encoding = (isset($node->encoding)) ? $node->encoding : 'UTF-8';
+        $encoding = $node->encoding;
+        // var_dump($encoding);
         $xmlVersion = $node->xmlVersion;
 
-        $document = new DOMDocument($xmlVersion, $encoding);
+        if (isset($encoding)) {
+            $document = new DOMDocument($xmlVersion, $encoding);
+        } else {
+            $document = new DOMDocument($xmlVersion);
+        }
+        
         $nodeString = $node->C14N();
 
         // If an empty string is passed as the source, a warning will be generated.
         if ($nodeString !== "") {
             $document->loadXML($nodeString);
             // $nodeString dows not contain `<?xml` declaration after ->C14N(). So ->encoding become NULL after loadXML.
-            $document->encoding = $encoding;
+            if (isset($encoding)) $document->encoding = $encoding;
         }
         $node = $document;
 
