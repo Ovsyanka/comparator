@@ -65,22 +65,34 @@ class DOMNodeComparator extends ObjectComparator
     /**
      * Returns the normalized, whitespace-cleaned, and indented textual
      * representation of a DOMNode.
+     *
+     * @param  DOMNode $node
+     * @param  bool $canonicalize Right now this parameter hardcoded with value `true`
+     * @param  bool $ignoreCase If false - xml text will be converted to lowercase
+     *
+     * @return string Text representation of DOMNode
      */
-    private function nodeToText(DOMNode $node, bool $canonicalize, bool $ignoreCase): string
+    public function nodeToText(DOMNode $node, bool $canonicalize = true, bool $ignoreCase = false): string
     {
-        if ($canonicalize) {
-            $document = new DOMDocument;
-            @$document->loadXML($node->C14N());
+        $encoding = (isset($node->encoding)) ? $node->encoding : 'UTF-8';
+        $xmlVersion = $node->xmlVersion;
 
-            $node = $document;
+        $document = new DOMDocument($xmlVersion, $encoding);
+        $nodeString = $node->C14N();
+
+        // If an empty string is passed as the source, a warning will be generated.
+        if ($nodeString !== "") {
+            $document->loadXML($nodeString);
+            // $nodeString dows not contain `<?xml` declaration after ->C14N(). So ->encoding become NULL after loadXML.
+            $document->encoding = $encoding;
         }
+        $node = $document;
 
-        $document = $node instanceof DOMDocument ? $node : $node->ownerDocument;
-
+        // Это нужно вообще?
         $document->formatOutput = true;
         $document->normalizeDocument();
 
-        $text = $node instanceof DOMDocument ? $node->saveXML() : $document->saveXML($node);
+        $text = $node->saveXML();
 
         return $ignoreCase ? $text : \strtolower($text);
     }

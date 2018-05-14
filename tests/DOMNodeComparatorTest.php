@@ -102,7 +102,11 @@ class DOMNodeComparatorTest extends TestCase
           [
             $this->createDOMDocument('<foo> bar </foo>'),
             $this->createDOMDocument('<foo> bir </foo>')
-          ]
+          ],
+          [
+            $this->createDOMDocument('<?xml version="1.0" encoding="UTF-8"?><foo>тест</foo>'),
+            $this->createDOMDocument('<?xml version="1.0"?><foo>тест</foo>')
+          ],
         ];
     }
 
@@ -166,6 +170,13 @@ class DOMNodeComparatorTest extends TestCase
         $this->expectExceptionMessage('Failed asserting that two DOM');
 
         $this->comparator->assertEquals($expected, $actual);
+    }
+
+    public function testNodeToTextEncoding() {
+      $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>тест</root>\n";
+      $document = $this->createDOMDocument($xml);
+
+      $this->assertSame($xml, $this->comparator->nodeToText($document, true, true));
     }
 
     private function createDOMDocument($content)
